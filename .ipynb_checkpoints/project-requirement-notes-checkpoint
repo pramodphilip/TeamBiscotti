@@ -1,0 +1,199 @@
+## you will scrape the following information from http://quotes.toscrape.com/
+
+- quote text
+- tags
+- Author name
+- Author Details
+  - born
+  - description
+
+# import splinter,beautifulsoup, webdriver, pandas, pymongo
+# create path and open browser window
+# establish url
+# visit site and grab page html
+# create soup object
+# create the initial list to store the data 
+	Quotes_Dictionary=[]
+# create a for loop to cycle through each quote box
+	# quote text, tags, Author name - these are on the same page, grab the specific html tag for these
+		# tags: findall on the <a> tag where the class=tag -do .text to just pull the text( if the .text doesn't work use get_text)
+	# create click function for the about link to access Author Details and grab the specific html tag for : born, description
+	# create back function to get back to main quotes page into to pull the next author information
+	# create dictionary
+		{"quote": quote_text,
+		"tags": [tags],
+		"author": author name,
+		"born": born,
+		"details":details}
+	#append to the mini dictionary for each quote box to the full Quotes_Dictionary
+	# create a while loop to click to the next page
+		# create click function for the next button
+	
+
+## Store the collected information into MongoDB( either local mongoDB or Atlas mongoDB)
+# create a database and collection(s): the collections should match to the postgres tables
+# create a connection
+# create a client
+# define the database
+# define the collections (db.collection name)
+# insert_many using data from Quotes_Dictionary; if that does not work, then try loop through Quotes_Dictionary and insert_one
+
+
+## Design the following three tables, Extract the data from mongoDB and load it into postgres
+# create tables in PGadmin
+
+- one table for quotes, this table can have the quote and author relationship (id, author_name, text )
+- one table for author information (name, born , description)
+- one table to store quote and tag relation (quote_id , tag)
+
+## Create a FLASK application with the following endpoints
+
+<details>
+<summary><strong>/home or / </strong></summary>
+	
+	This route should display the available routes :
+
+</details>	
+	
+<details>
+    <summary><strong>/quotes </strong></summary>
+
+This route will dispaly all the available quotes in the database.
+
+```
+{
+    total: <total number quotes scraped >,
+    quotes : [
+                {
+                    text: <quote text >,
+                    author name: <author name >,
+                    tags: []
+                },
+	            ...
+	        ]
+}
+
+```
+
+</details>
+
+<details>
+    <summary><strong>/authors </strong></summary>
+
+This route will display the information about all the authors available in the database.
+
+```
+{
+    total: <total number of authors>,
+    details:[
+            	{
+            		name : <author name >,
+            		description : <author description>,
+            		born : <date of birth etc. >,
+            		count : <total number of quotes by this author >,
+            		quotes : [
+                				{
+                    				text: <quote text>,
+                    				tags: []
+                				},
+            		...
+            		]
+            	},
+        	...
+    	]
+}
+```
+
+</details>
+
+<details>
+    <summary><strong>/authors/< author name > </strong></summary>
+
+This route will display the information about a particular author.
+
+```
+{
+    name: <Author name>,
+    description: <author description>,
+    born: <date of birth etc>
+    number_of_quotes :  <total quotes by the author>
+    quotes : [
+    		{
+    			text: <quote text>,
+    			tags: []
+    		},
+            ...
+    	]
+}
+```
+
+</details>
+
+<details>
+    <summary><strong>/tags </strong></summary>
+
+this route will dispaly all the available tags in the database.
+
+```
+{
+	count: <total tags>,
+	details:[
+        		{
+        			name: < tag>,
+        			number_of_quotes :  <total quotes this tag appears in >
+        			quotes : [
+                				{
+                					text: <quote text>,
+                					tags: []
+                				},
+                                ...
+    				        ]
+        		},
+            ...
+	]
+}
+
+```
+
+</details>
+
+<details>	
+    <summary><strong>/tags/< tag > </strong></summary>
+
+this route will display the information about a particual tag only.
+
+```
+{
+	tag : <tag name>,
+	count : <number of quotes this tag appears in >,
+	quotes : [
+			{
+    			quote : <quote text >,
+    			tags : []
+			},
+		...
+		]
+
+}
+
+```
+
+</details>
+
+<details>
+   <summary><strong>/top10tags </strong></summary>
+
+This route will display the information about top10 tags.
+
+```
+	[
+		{
+		tag: < tag name > ,
+		quote count: < number of quotes this tag appears in >
+		},
+		...
+	]
+
+```
+
+</details>
