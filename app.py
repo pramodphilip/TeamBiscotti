@@ -4,7 +4,7 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func, inspect, desc
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 # postgres pasword
 from config import postgres_password as password
 
@@ -67,45 +67,91 @@ def quote():
     # Total # of quotes
     tot_num_quotes = session.query(Quotes).group_by(Quotes.quote_id).count() #100
 
-    # Getting all quotes, author, tags for quote
-    all_quotes = engine.execute("SELECT quote.quote_text, quote.author_name, STRING_AGG (tags.tags_list,', ' ORDER BY quote.author_name) tags FROM quote INNER JOIN tags USING (quote_id) GROUP BY quote.quote_text, quote.author_name").fetchall()
+    # Quesry postgres tables to get data on all quotes
+    all_quotes = engine.execute(f"\
+                                SELECT quote.quote_text, quote.author_name,\
+                                    STRING_AGG (tags.tags_list,', ' \
+                                    ORDER BY quote.author_name) \
+                                FROM quote INNER JOIN tags USING (quote_id) \
+                                GROUP BY quote.quote_text, quote.author_name").fetchall()
 
-    return( f'Total number of quotes: {tot_num_quotes}',
-            f'QUOTES: {all_quotes}'
-        )
+    # Create list of dicts for easy use with json
+    quote_list = []
+    for i in range(0,len(all_quotes)):
+        quote_dict = {}
+        quote_dict["quote"] = all_quotes[i][0]
+        quote_dict['auth'] = all_quotes[i][1]
+        quote_dict['tags'] = all_quotes[i][2]
+        quote_list.append(quote_dict)
+
+    # add total number of Quotes and the quote_list to one dict for easier return statement
+    quote_json = [f"Total Number of Quotes: {tot_num_quotes}", quote_list]
+
+    return jsonify(Quotes=quote_list, Number_of_Qoutes=tot_num_quotes)
 
     # close session    
     session.close()
     
 #############################################################################
 
-@app.route("/api/v1.0/author")
-def author():
+# @app.route("/api/v1.0/author")
+# def author():
 
-# start new session
-session = Session(bind=engine)
+    # start new session
+    #session = Session(bind=engine)
 
-# run grouping query for all the author info
-all_author = engine.execute("SELECT quote.author_name, author.description, author.birth_date, author.birth_place, COUNT(quote.quote_text), quote.quote_text, STRING_AGG (tags.tags_list,', ' ORDER BY quote.author_name) tags FROM quote INNER JOIN tags USING (quote_id) INNER JOIN author USING (author_name) GROUP BY quote.author_name, author.description, author.birth_date, author.birth_place, quote.quote_text").fetchall()
+    # run grouping query for all the author info
+    #all_author = engine.execute("SELECT quote.author_name, author.description, author.birth_date, author.birth_place, COUNT(quote.quote_text), quote.quote_text, STRING_AGG (tags.tags_list,', ' ORDER BY quote.author_name) tags FROM quote INNER JOIN tags USING (quote_id) INNER JOIN author USING (author_name) GROUP BY quote.author_name, author.description, author.birth_date, author.birth_place, quote.quote_text").fetchall()
 
-return(all_author)
+    #return(all_author)
 
-# close session          
-session.close()
+    # close session          
+    #session.close()
 
 #############################################################################
 
 @app.route("/api/v1.0/author/<author_name>")
-def one_author():
-# start new session
-session = Session(bind=engine)
+def one_author(author_name):
+    # start new session
+    session = Session(bind=engine)
 
-# run grouping query for all the author info
-all_author = engine.execute("SELECT quote.author_name, author.description, author.birth_date, author.birth_place, (SELECT COUNT(quote_text) FROM quote WHERE quote.author_name = (SELECT author_name FROM author)), STRING_AGG (quote.quote_text,', '), STRING_AGG (tags.tags_list,', ' ORDER BY quote.author_name) tags FROM quote INNER JOIN tags USING (quote_id) INNER JOIN author USING (author_name) GROUP BY quote.author_name, author.description, author.birth_date, author.birth_place").fetchall()
+    # run grouping query for all the author info
+    one_author = engine.execute(f"\
+        SELECT quote.author_name, author.description, author.birth_date, author.birth_place, quote.quote_text, \
+            (SELECT COUNT(quote_text) \
+            FROM quote \
+            WHERE author_name = '{author_name}'), \
+        STRING_AGG (tags.tags_list,', ' ORDER BY quote.author_name) tags \
+        FROM quote \
+        INNER JOIN tags USING (quote_id) \
+        INNER JOIN author USING (author_name) \
+        WHERE author_name = '{author_name}' \
+        GROUP BY quote.author_name, author.description, author.birth_date, author.birth_place, quote.quote_text").fetchall()
+    one_author
 
-print(all_author)
-           
-session.close()
+    # Create a dict with the static values     
+    one_auth_dict = {"a_name" : one_author[0][0],
+                    "b_description" : one_author[0][1], 
+                    "c_birth_date" : one_author[0][2], 
+                    "d_birth_place" : one_author[0][3], 
+                    "e_num_quotes" : one_author[0][5],
+                    }
+    # Initialize a list with for the dict     
+    quote_tag_list = []
+
+    # for loop to get the related tags and quote info into sing dict   
+    for i in range(0,len(one_author)):
+        quote_tag_dict={}
+        quote_tag_dict["quote"] = one_author[i][4]
+        quote_tag_dict["tags"] = one_author[i][6]
+        quote_tag_list.append(quote_tag_dict)
+
+    # add list with little dicts to big dict   
+    one_auth_dict['f_quote_tags']=quote_tag_list
+
+    return jsonify(one_auth_dict)
+            
+    session.close()
 
 #############################################################################
 #@app.route("/api/v1.0/tags")
