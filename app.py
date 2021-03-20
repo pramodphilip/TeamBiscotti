@@ -45,16 +45,17 @@ app = Flask(__name__)
 @app.route("/")
 
 def welcome():
-    """List all available api routes."""
-    return (
-        f'Available Routes:<br/>'
-        f'/api/v1.0/quote<br/>'
-        f'/api/v1.0/author<br/>'
-        f'/api/v1.0/author/<author_name><br/>'
-        f'/api/v1.0/tags<br/>'
-        f'/api/v1.0/tags/<tag>'
-        f'/api/v1.0/top10tags'
-    )
+    return render_template('index.html')
+    # """List all available api routes."""
+    # return (
+    #     f'Available Routes:<br/>'
+    #     f'/api/v1.0/quote<br/>'
+    #     f'/api/v1.0/author<br/>'
+    #     f'/api/v1.0/author/<author_name><br/>'
+    #     f'/api/v1.0/tags<br/>'
+    #     f'/api/v1.0/tags/<tag>'
+    #     f'/api/v1.0/top10tags'
+    # )
 ###########################################################################
 
 #	1. This route will dispaly all the available quotes in the database
